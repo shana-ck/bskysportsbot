@@ -87,6 +87,7 @@ const subscribe = async() => {
         streamingApiUrl: process.env.STREAMING_API_URL, // This must be the streaming URL of the mastodon instance you are logged in on, otherwise the access token will not work
         accessToken: process.env.ACCESS_TOKEN  // Mastodon API token which I assume you know how to get
     })
+	console.log("running!")
 	let newPost
 
 	for await (const event of masto.list.subscribe({list: process.env.LIST_ID})) { // see README for more info
