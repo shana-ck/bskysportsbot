@@ -6,8 +6,8 @@ import "dotenv/config"
 const bot = new Bot()
 
 await bot.login({
-	identifier: process.env.BSKY_HANDLE,
-	password: process.env.BSKY_PW,
+	identifier: process.env.BSKY_HANDLE, // make sure to update .env with your bot handle!
+	password: process.env.BSKY_PW, // make sure to update .env with your bot password (app password is fine)
 });
 
 const HANDLE = 'bruinsnhlbot.bsky.social' // replace with the handle of your own bot
@@ -16,12 +16,12 @@ const getPostText = (awaitTweet) => {
     let pReg = new RegExp("</p><p>", "g"); // A regex to deal with <p></p>. This should create a new section in the text, which we do via 2 line breaks.
     let brReg = new RegExp("<br>", "g"); // A regex to deal with <br>. This should go to the next line, which we do via a line break.
     let quoteReg = new RegExp(`\\\\"`, "g"); // A regex to deal with \". This should be replaced with a " value with no \.
-    let singleQuoteReg = new RegExp("&#39;", "g")
+    let singleQuoteReg = new RegExp("&#39;", "g") // A regex to deal with single quotes/apostrophes
     let andReg = new RegExp("&amp;", "g"); // A regex to deal with &amp;. This should be replaced with &.
     let logoReg = new RegExp("&nbsp;", "g"); // A regex to deal with &nbsp;. Should be deleted.
     let twitterReg = new RegExp("@twitter.com", "g"); // A regex to deal with @twitter.com. Should be deleted.
     let sportsBotsReg = new RegExp("@sportsbots.xyz", "g");
-    let selfReg = new RegExp("@nhlbruins@sportsbots.xyz", "g"); // A regex to deal with the bot's own @
+    let selfReg = new RegExp("@nhlbruins@sportsbots.xyz", "g"); // A regex to deal with the bot's own @. REPLACE WITH THE @ OF YOUR BOT!
     let tagReg = new RegExp("<(:?[^>]+)>", "g"); // A general regex for HTML. Used to get the plaintext value of the mastodon post without tag notation.
     // let invalidLinkReg = new RegExp(
     //   "\\S*(\\.com|\\.ca|\\.org|\\.net)\\S*(…|\\.\\.\\.)",
@@ -44,8 +44,9 @@ const getPostText = (awaitTweet) => {
 			}
 			if (attachment.type == "video" || attachment.type == "gifv") {
 				postAltTextArr.push(attachment.meta["original"]["width"], attachment.meta["original"]["height"], attachment.meta["original"]["duration"], attachment.previewUrl)
+				// all the video information required to upload to bluesky correctly
 			}
-			if (attachment.description != null) {
+			if (attachment.description != null) { // retrieve alt text (if provided)
 				postAltTextArr.push(attachment.description)
 			} else {
 				postAltTextArr.push("NOALTTEXT")
@@ -63,7 +64,7 @@ const getPostText = (awaitTweet) => {
 			contentString = contentString + "\n\n (Offer not valid on Bluesky.)";
 		}
 
-		if (objJSON["card"] != null)
+		if (objJSON.card != null)
 		{
 			// contentString = contentString.replace(invalidLinkReg, objJSON.card.url);
 			let postCardArr = [];
@@ -88,14 +89,13 @@ const subscribe = async() => {
     })
 	let newPost
 
-	for await (const event of masto.list.subscribe({list: process.env.LIST_ID})) {
+	for await (const event of masto.list.subscribe({list: process.env.LIST_ID})) { // see README for more info
 		switch (event.event) {
-			case "update": 
-				console.log("new post")
+			case "update": // listens for new posts
+				// console.log("new post")
 				newPost = getPostText(event.payload)
-				console.log(event.payload)
+				// console.log(event.payload)
 				let postInfo = constructPost(newPost)
-				console.log(postInfo)
 				await bot.post(postInfo)
 			break
 			default:
