@@ -36,11 +36,11 @@ const constructPost = (postObject) => {
                     postData.images = imageObj
                 } else {
                     let altText
-                    if (alt[0].length != 0) {
-                        if (alt[0][i] == "NOALTTEXT") {
+                    if (alt[0].length > 2) {
+                        if (alt[0][2] == "NOALTTEXT") {
                             altText = null
                         } else {
-                            altText = alt[0][i]
+                            altText = alt[0][2]
                         }
                     } else {
                         altText = null
