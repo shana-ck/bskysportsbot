@@ -1,15 +1,3 @@
-import { createStreamingAPIClient } from "masto";
-import constructPost from "./bot.js";
-import { Bot } from "@skyware/bot";
-import "dotenv/config"
-
-const bot = new Bot()
-
-await bot.login({
-	identifier: process.env.BSKY_HANDLE, // make sure to update .env with your bot handle!
-	password: process.env.BSKY_PW, // make sure to update .env with your bot password (app password is fine)
-});
-
 const HANDLE = 'bruinsnhlbot.bsky.social' // replace with the handle of your own bot
 
 const getPostText = (awaitTweet) => {
@@ -21,7 +9,7 @@ const getPostText = (awaitTweet) => {
     let logoReg = new RegExp("&nbsp;", "g"); // A regex to deal with &nbsp;. Should be deleted.
     let twitterReg = new RegExp("@twitter.com", "g"); // A regex to deal with @twitter.com. Should be deleted.
     let sportsBotsReg = new RegExp("@sportsbots.xyz", "g");
-    let selfReg = new RegExp("@nhlbruins@sportsbots.xyz", "g"); // A regex to deal with the bot's own @. REPLACE WITH THE @ OF YOUR BOT!
+    let selfReg = new RegExp(HANDLE, "g"); // A regex to deal with the bot's own @. REPLACE WITH THE @ OF YOUR BOT!
     let tagReg = new RegExp("<(:?[^>]+)>", "g"); // A general regex for HTML. Used to get the plaintext value of the mastodon post without tag notation.
     // let invalidLinkReg = new RegExp(
     //   "\\S*(\\.com|\\.ca|\\.org|\\.net)\\S*(…|\\.\\.\\.)",
@@ -37,14 +25,16 @@ const getPostText = (awaitTweet) => {
     let cardArr = [];
     let postUrlArr = [];
     let postAltTextArr = [];
-	if (objJSON.mediaAttachments.length > 0) {
-		for (const attachment of objJSON.mediaAttachments) {
+	if (objJSON.media_attachments.length > 0) {
+		for (const attachment of objJSON.media_attachments) {
 			if (attachment.type == "image" || attachment.type == "gifv" || attachment.type == "video") {
 				postUrlArr.push(attachment.url)
 			}
 			if (attachment.type == "video" || attachment.type == "gifv") {
 				postAltTextArr.push(attachment.meta["original"]["width"], attachment.meta["original"]["height"], attachment.meta["original"]["duration"], attachment.previewUrl)
 				// all the video information required to upload to bluesky correctly
+			} else {
+				postAltTextArr.push(attachment.meta["original"]["width"], attachment.meta["original"]["height"])
 			}
 			if (attachment.description != null) { // retrieve alt text (if provided)
 				postAltTextArr.push(attachment.description)
@@ -82,29 +72,4 @@ const getPostText = (awaitTweet) => {
         return postObj; 
 }
 
-const subscribe = async() => {
-    const masto = createStreamingAPIClient({
-        streamingApiUrl: process.env.STREAMING_API_URL, // This must be the streaming URL of the mastodon instance you are logged in on, otherwise the access token will not work
-        accessToken: process.env.ACCESS_TOKEN  // Mastodon API token which I assume you know how to get
-    })
-	console.log("running!")
-	let newPost
-
-	for await (const event of masto.list.subscribe({list: process.env.LIST_ID})) { // see README for more info
-		switch (event.event) {
-			case "update": // listens for new posts
-				// console.log("new post")
-				newPost = getPostText(event.payload)
-				// console.log(event.payload)
-				let postInfo = constructPost(newPost)
-				await bot.post(postInfo)
-			break
-			default:
-				break
-		}
-	}
-	return newPost
-}
-
-
-export default subscribe
+export default getPostText

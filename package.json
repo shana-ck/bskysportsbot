@@ -1,20 +1,30 @@
 {
   "name": "bskysportsbot",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Template repo for a bot that mirrors a Mastodon acount",
   "license": "MIT",
-  "author": {"name": "Civ K"},
+  "author": {
+    "name": "Civ K"
+  },
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ."
   },
-  "keywords": ["bsky", "bluesky", "atproto", "bot", "mastodon"],
+  "keywords": [
+    "bsky",
+    "bluesky",
+    "atproto",
+    "bot",
+    "mastodon"
+  ],
   "dependencies": {
     "@atcute/bluesky": "^3.3.0",
     "@skyware/bot": "^0.4.1",
+    "better-sqlite3": "^12.8.0",
     "dotenv": "^17.3.1",
-    "masto": "^7.10.2"
+    "express": "^5.2.1",
+    "megalodon": "^10.2.4",
+    "prom-client": "^15.1.3"
   }
 }

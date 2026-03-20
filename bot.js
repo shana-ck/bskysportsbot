@@ -15,7 +15,6 @@ const constructPost = (postObject) => {
         let imagesArr = [] // initialize image array so you can post multiple images (Bluesky limits you to 4 in one post and as far as I am aware so does Xitter so this should not be an issue?)
         for (let i = 0; i < urls[0].length; i++) {
             let url = urls[0][i]
-            console.log(typeof(url))
             if (url.slice(-3) == "mp4" && parseFloat(alt[0][2]) < 180) { // limits videos to 180 seconds in length as per Bluesky video limits
                 let altText
                 if (alt[0].length == 5) {
