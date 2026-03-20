@@ -31,7 +31,7 @@ Hey look I figured out Docker! Just run `docker build -t bskysportsbot .` to bui
 
 Intimidated by Docker? Me too. Fortunately you can just use something like PM2 to run the code in a VPS or on a Raspberry Pi.
 
-Once the bot is running, you can check the logs and should see "running!" The post object that gets fed to the Bluesky bot's post function will also get logged.
+Once the bot is running, you can check the logs and should see "connected to Mastodon streaming API". On a successful post to Bluesky, the bot will log the post URI.
 
 ## TODO
 
