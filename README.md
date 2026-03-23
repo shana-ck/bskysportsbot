@@ -25,7 +25,7 @@ This is only halfway implemented because I'm teaching myself Docker and am too i
 
 ### In Docker
 
-Hey look I figured out Docker! Just run `docker build -t bskysportsbot .` to build and `docker run -d --env-file .env bskysportsbot` (to run detached using your .env file). I have not published an image so you need to build it locally.
+Hey look I figured out Docker! Use the attached Docker Compose file to run in Docker. This also sets up a container running Prometheus with metrics. You will need to set up your own `prometheus.yml` in order to view metrics in Grafana.
 
 ### Not in Docker
 
@@ -35,8 +35,8 @@ Once the bot is running, you can check the logs and should see "connected to Mas
 
 ## TODO
 
-[ ] Figure out if there's anything I can do about link cards
+- [ ] Figure out if there's anything I can do about link cards
 
-[ ] Add some error handling for bot posting to Bluesky
+- [x] Add some error handling for bot posting to Bluesky
 
-[ ] Improve logging/add metrics monitoring
+- [x] Improve logging/add metrics monitoring
