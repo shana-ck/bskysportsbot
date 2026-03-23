@@ -1,6 +1,6 @@
 import Database from "better-sqlite3"
 
-const db = new Database('postsBuffer.db')
+const db = new Database('/db_data/postsBuffer.db')
 const createTableStmt = `
   CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

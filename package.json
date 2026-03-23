@@ -1,6 +1,6 @@
 {
   "name": "bskysportsbot",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Template repo for a bot that mirrors a Mastodon acount",
   "license": "MIT",
   "author": {

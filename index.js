@@ -1,7 +1,7 @@
 import generator from 'megalodon'
 import constructPost from "./bot.js";
 import getPostText from './subscribe.js';
-import { startMetricsServer, restarts } from './server.js';
+import { startMetricsServer, successPosts, failPosts } from './server.js';
 import { Bot } from "@skyware/bot";
 import "dotenv/config"
 import db from "./db.js";
@@ -37,9 +37,11 @@ const checkDb = async() => {
             // attempt to post all posts from the database
             try {
                 const id = post.id
-				const postBuffer = await bot.post(JSON.parse(post.post)) // convert post data from JSON and send to bot
+				const postBuffer = await bot.post(JSON.parse(post.post), { splitLongPost: true}) // convert post data from JSON and send to bot
                 if (postBuffer.uri) { // check if post was successful
                     console.log("posted from db", postBuffer.uri) // log post uri
+		    successPosts.inc()
+		    failPosts.dec()
                     deleteStmt.run(id) // delete post from database so we don't keep posting it
                 }
 			} catch (err) {
@@ -59,10 +61,12 @@ stream.on('update', async (status) => {
     let postInfo = constructPost(newPost)
     console.log(postInfo)
 			try {
-				const posted = await bot.post(postInfo)
+				const posted = await bot.post(postInfo, {splitLongPost: true})
 				console.log("posted successfully", posted.uri)
+				successPosts.inc()
 			} catch (err) {
 				console.log(err)
+				failPosts.inc()
                 const jsonData = JSON.stringify(postInfo) // convert for insertion into db
 				insert.run(jsonData) // store post info in the database so we can try to post it again later if the bot failed
 			}
