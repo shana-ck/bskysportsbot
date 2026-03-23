@@ -12,16 +12,19 @@ const constructPost = (postObject) => {
         // unfortunately there's really no guarantee, so the bot might end up just posting a link without a card by parsing the link in the text string
     }
     if (urls[0].length > 0) { // deal with images/videos
+        // if (urls[0].length > 1 && urls[0].some(link => link.includes('.mp4'||'.gifv'))) {
+        //     console.log("found")
+        // }
         let imagesArr = [] // initialize image array so you can post multiple images (Bluesky limits you to 4 in one post and as far as I am aware so does Xitter so this should not be an issue?)
         for (let i = 0; i < urls[0].length; i++) {
             let url = urls[0][i]
             if (url.slice(-3) == "mp4" && parseFloat(alt[0][2]) < 180) { // limits videos to 180 seconds in length as per Bluesky video limits
                 let altText
-                if (alt[0].length == 5) {
-                    if (alt[0][4] == "NOALTTEXT") {
+                if (alt[0].length > 5) {
+                    if (alt[0][5] == "NOALTTEXT") {
                         altText = null
                     } else {
-                        altText = alt[0][4]
+                        altText = alt[0][5]
                     }
                 }
                 else {
@@ -36,14 +39,14 @@ const constructPost = (postObject) => {
                     postData.images = imageObj
                 } else {
                     let altText
-                    if (alt[0].length > 2) {
-                        if (alt[0][2] == "NOALTTEXT") {
+                    if (alt[0][i] == "NOALTTEXT") {
                             altText = null
                         } else {
-                            altText = alt[0][2]
+                            if (typeof(alt[0][i] != 'string')) {
+                                altText = null
+                            } else {
+                            altText = alt[0][i]
                         }
-                    } else {
-                        altText = null
                     }
                     let imageObj = {data: url, alt: altText}
                     imagesArr.push(imageObj)

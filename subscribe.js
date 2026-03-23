@@ -31,10 +31,10 @@ const getPostText = (awaitTweet) => {
 				postUrlArr.push(attachment.url)
 			}
 			if (attachment.type == "video" || attachment.type == "gifv") {
-				postAltTextArr.push(attachment.meta["original"]["width"], attachment.meta["original"]["height"], attachment.meta["original"]["duration"], attachment.previewUrl)
+				postAltTextArr.push(attachment.meta["original"]["width"], attachment.meta["original"]["height"], attachment.meta["original"]["duration"], attachment.preview_url)
 				// all the video information required to upload to bluesky correctly
-			} else {
-				postAltTextArr.push(attachment.meta["original"]["width"], attachment.meta["original"]["height"])
+			// } else {
+			// 	postAltTextArr.push(attachment.meta["original"]["width"], attachment.meta["original"]["height"])
 			}
 			if (attachment.description != null) { // retrieve alt text (if provided)
 				postAltTextArr.push(attachment.description)

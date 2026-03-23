@@ -59,7 +59,15 @@ stream.on('connect', () => {
 stream.on('update', async (status) => {
     let newPost = getPostText(status)
     let postInfo = constructPost(newPost)
-    console.log(postInfo)
+    // console.log(postInfo)
+    if (postInfo.video != null && postInfo.images !=null) {
+        let { images, ...videoPost } = postInfo
+        let { video, ...imagePost } = postInfo
+        postInfo = videoPost
+        const jsonData = JSON.stringify(imagePost)
+        insert.run(jsonData)
+        await checkDb()
+    }
 			try {
 				const posted = await bot.post(postInfo, {splitLongPost: true})
 				console.log("posted successfully", posted.uri)
