@@ -1,4 +1,4 @@
-const HANDLE = 'bruinsnhlbot.bsky.social' // replace with the handle of your own bot
+const HANDLE = 'process.env.BSKY_HANDLE' // gets bluesky handle of your bot from .env file
 
 const getPostText = (awaitTweet) => {
     let pReg = new RegExp("</p><p>", "g"); // A regex to deal with <p></p>. This should create a new section in the text, which we do via 2 line breaks.
@@ -9,7 +9,7 @@ const getPostText = (awaitTweet) => {
     let logoReg = new RegExp("&nbsp;", "g"); // A regex to deal with &nbsp;. Should be deleted.
     let twitterReg = new RegExp("@twitter.com", "g"); // A regex to deal with @twitter.com. Should be deleted.
     let sportsBotsReg = new RegExp("@sportsbots.xyz", "g");
-    let selfReg = new RegExp(HANDLE, "g"); // A regex to deal with the bot's own @. REPLACE WITH THE @ OF YOUR BOT!
+    let selfReg = new RegExp(HANDLE, "g"); // A regex to deal with the bot's own @
     let tagReg = new RegExp("<(:?[^>]+)>", "g"); // A general regex for HTML. Used to get the plaintext value of the mastodon post without tag notation.
     // let invalidLinkReg = new RegExp(
     //   "\\S*(\\.com|\\.ca|\\.org|\\.net)\\S*(…|\\.\\.\\.)",
