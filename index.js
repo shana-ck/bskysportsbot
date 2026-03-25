@@ -57,6 +57,9 @@ stream.on('connect', () => {
 )
 
 stream.on('update', async (status) => {
+    if (status.reblog != null) {
+	status = status.reblog
+    }
     let newPost = getPostText(status)
     let postInfo = constructPost(newPost)
     // console.log(postInfo)
@@ -70,7 +73,7 @@ stream.on('update', async (status) => {
     }
 			try {
 				const posted = await bot.post(postInfo, {splitLongPost: true})
-				console.log("posted successfully", posted.uri)
+				console.log("posted successfully", posted.uri, postInfo)
 				successPosts.inc()
 			} catch (err) {
 				console.log(err)
