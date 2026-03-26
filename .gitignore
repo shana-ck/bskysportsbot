@@ -2,3 +2,4 @@
 node_modules
 *.db
 prometheus.yml
+tester.js

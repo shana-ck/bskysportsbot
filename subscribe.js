@@ -1,4 +1,7 @@
-const HANDLE = 'process.env.BSKY_HANDLE' // gets bluesky handle of your bot from .env file
+import "dotenv/config"
+
+const HANDLE = process.env.BSKY_HANDLE // gets bluesky handle of your bot from .env file
+const MASTO_HANDLE = process.env.MASTO_HANDLE 
 
 const getPostText = (awaitTweet) => {
     let pReg = new RegExp("</p><p>", "g"); // A regex to deal with <p></p>. This should create a new section in the text, which we do via 2 line breaks.
@@ -9,24 +12,27 @@ const getPostText = (awaitTweet) => {
     let logoReg = new RegExp("&nbsp;", "g"); // A regex to deal with &nbsp;. Should be deleted.
     let twitterReg = new RegExp("@twitter.com", "g"); // A regex to deal with @twitter.com. Should be deleted.
     let sportsBotsReg = new RegExp("@sportsbots.xyz", "g");
-    let selfReg = new RegExp(HANDLE, "g"); // A regex to deal with the bot's own @
+    let selfReg = new RegExp(MASTO_HANDLE, "g"); // A regex to deal with the bot's own @
     let tagReg = new RegExp("<(:?[^>]+)>", "g"); // A general regex for HTML. Used to get the plaintext value of the mastodon post without tag notation.
-    // let invalidLinkReg = new RegExp(
+    let gtReg = new RegExp("&gt;", "g") // deal with greater-than symbols (>)
+	let ltReg = new RegExp("&lt;", "g") // deal with less-than symbols (<)
+	// let invalidLinkReg = new RegExp(
     //   "\\S*(\\.com|\\.ca|\\.org|\\.net)\\S*(…|\\.\\.\\.)",
     //   "g"
     // );
   
     
-	let postObj = {urls: [], strings: [], alt: [], cards: []}
+	let postObj = {urls: [], strings: [], alts: [], cards: []}
     let objJSON = awaitTweet
     let stringArr = []; // Initialize an empty array that we will store the regexed plaintexts in.
     let urlArr = [];
     let altTextArr = [];
     let cardArr = [];
     let postUrlArr = [];
-    let postAltTextArr = [];
+
 	if (objJSON.media_attachments.length > 0) {
 		for (const attachment of objJSON.media_attachments) {
+			let postAltTextArr = [];
 			if (attachment.type == "image" || attachment.type == "gifv" || attachment.type == "video") {
 				postUrlArr.push(attachment.url)
 			}
@@ -41,13 +47,15 @@ const getPostText = (awaitTweet) => {
 			} else {
 				postAltTextArr.push("NOALTTEXT")
 			}
+			altTextArr.push(postAltTextArr);
 		}
+		
 	}
 		urlArr.push(postUrlArr);
-		altTextArr.push(postAltTextArr);
+		
 		let contentJSON = objJSON.content; // Retrieve post content 
 
-		let contentString = contentJSON.replace(twitterReg, "").replace(selfReg, HANDLE).replace(sportsBotsReg, "").replace(logoReg, "").replace(quoteReg, `"`).replace(andReg, "&").replace(pReg, "\n\n").replace(brReg, "\n").replace(tagReg, "").replace(singleQuoteReg, "'"); //Use the ", &, <p>, and <br> regexes to apply appropriate formatting. Then use the general regex to remove the HTML formatting from the mastodon post. 
+		let contentString = contentJSON.replace(twitterReg, "").replace(selfReg, HANDLE).replace(sportsBotsReg, "").replace(logoReg, "").replace(quoteReg, `"`).replace(andReg, "&").replace(pReg, "\n\n").replace(brReg, "\n").replace(tagReg, "").replace(singleQuoteReg, "'").replace(gtReg, ">").replace(ltReg, "<"); //Use the ", &, <p>, and <br> regexes to apply appropriate formatting. Then use the general regex to remove the HTML formatting from the mastodon post. 
 
 		if (contentString.includes("GreatClips") || contentString.includes("HarrisTeeter") || contentString.includes(" RT ") || contentString.includes("Retweet ") || contentString.includes("retweet ") || contentString.includes("RETWEET "))
 		{
@@ -67,7 +75,7 @@ const getPostText = (awaitTweet) => {
 		stringArr.push(contentString); // Add the regexed content to the array of plaintexts.
 		postObj.urls = urlArr
 		postObj.strings = stringArr
-		postObj.alt = altTextArr
+		postObj.alts = altTextArr
 		postObj.cards = cardArr
         return postObj; 
 }

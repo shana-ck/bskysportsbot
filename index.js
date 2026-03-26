@@ -40,8 +40,8 @@ const checkDb = async() => {
 				const postBuffer = await bot.post(JSON.parse(post.post), { splitLongPost: true}) // convert post data from JSON and send to bot
                 if (postBuffer.uri) { // check if post was successful
                     console.log("posted from db", postBuffer.uri) // log post uri
-		    successPosts.inc()
-		    failPosts.dec()
+		            successPosts.inc()
+		            failPosts.dec()
                     deleteStmt.run(id) // delete post from database so we don't keep posting it
                 }
 			} catch (err) {
@@ -62,26 +62,50 @@ stream.on('update', async (status) => {
     }
     let newPost = getPostText(status)
     let postInfo = constructPost(newPost)
+    // deal with scenarios where we need to split media attachments (videos/gifs/images) into multiple posts
+    let multiPost = false
+    let postsArray = []
     // console.log(postInfo)
-    if (postInfo.video != null && postInfo.images !=null) {
+    if (postInfo.video.length) {
+        multiPost = true
+        for (let i=0; i< postInfo.video.length; i++) {
+        let {...postData} = postInfo
+        postData.video = postInfo.video[i]
+        postsArray.push(postData)
+        }
+    } else if (postInfo.video != null && postInfo.images !=null) {
         let { images, ...videoPost } = postInfo
         let { video, ...imagePost } = postInfo
-        postInfo = videoPost
-        const jsonData = JSON.stringify(imagePost)
-        insert.run(jsonData)
-        await checkDb()
+        postsArray.push(videoPost, imagePost)
     }
+    if (!multiPost) {
 			try {
 				const posted = await bot.post(postInfo, {splitLongPost: true})
 				console.log("posted successfully", posted.uri, postInfo)
 				successPosts.inc()
 			} catch (err) {
 				console.log(err)
+                console.log(postInfo)
 				failPosts.inc()
                 const jsonData = JSON.stringify(postInfo) // convert for insertion into db
 				insert.run(jsonData) // store post info in the database so we can try to post it again later if the bot failed
 			}
-})
+        } else {
+            try {
+                for (let i=0; i< postsArray.length; i++) {
+                    let posted = await bot.post(postsArray[i])
+                    console.log("posted successfully", posted.uri)
+                    successPosts.inc()
+                    }
+                } catch(err) {
+                    console.log(err)
+                    console.log(postsArray[i])
+                    failPosts.inc()
+                    const jsonData = JSON.stringify(postsArray[i]) // convert for insertion into db
+                    insert.run(jsonData)
+            }
+        }
+    })
 
 setInterval(checkDb, 30*60*1000) // check the db every 30 minutes to see if we missed any posts
 // 30 minutes was an arbitrary choice, do whatever you want
