@@ -5,6 +5,8 @@ import { startMetricsServer, successPosts, failPosts } from './server.js';
 import { Bot } from "@skyware/bot";
 import "dotenv/config"
 import db from "./db.js";
+import { DatabaseSync } from 'node:sqlite'
+
 
 const bot = new Bot()
 
@@ -19,6 +21,7 @@ bot.on("error", (err) => {
 	console.log("error!!!", err)
 })
 
+
 const client = generator('mastodon', process.env.INSTANCE_URL, process.env.ACCESS_TOKEN)
 // instance URL is literally just the URL for the instance you use to log in
 
@@ -27,6 +30,10 @@ const stream = await client.listStreaming(process.env.LIST_ID) // ID of the list
 // database operations
 const insert = db.prepare('INSERT INTO posts (post) VALUES (?)')
 const deleteStmt = db.prepare(`DELETE FROM posts WHERE id = ?`)
+const stmt = db.prepare('SELECT COUNT(*) AS count from posts')
+const res = stmt.get()
+const tableLength = res.count
+failPosts.set(tableLength)
 
 const checkDb = async() => {
     // first check if there are any posts in the database
@@ -66,7 +73,7 @@ stream.on('update', async (status) => {
     let multiPost = false
     let postsArray = []
     // console.log(postInfo)
-    if (postInfo.video.length) {
+    if (Array.isArray(postInfo.video)) {
         multiPost = true
         for (let i=0; i< postInfo.video.length; i++) {
         let {...postData} = postInfo
@@ -107,6 +114,7 @@ stream.on('update', async (status) => {
         }
     })
 
+checkDb()
 setInterval(checkDb, 30*60*1000) // check the db every 30 minutes to see if we missed any posts
 // 30 minutes was an arbitrary choice, do whatever you want
 
