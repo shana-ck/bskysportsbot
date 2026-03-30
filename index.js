@@ -44,11 +44,15 @@ const checkDb = async() => {
             // attempt to post all posts from the database
             try {
                 const id = post.id
-				const postBuffer = await bot.post(JSON.parse(post.post), { splitLongPost: true}) // convert post data from JSON and send to bot
+		let postData = JSON.parse(post.post)
+		if ('createdAt' in postData) {
+			delete postData.createdAt
+		}
+		const postBuffer = await bot.post(postData, { splitLongPost: true}) // convert post data from JSON and send to bot
                 if (postBuffer.uri) { // check if post was successful
                     console.log("posted from db", postBuffer.uri) // log post uri
-		            successPosts.inc()
-		            failPosts.dec()
+		    successPosts.inc()
+		    failPosts.dec()
                     deleteStmt.run(id) // delete post from database so we don't keep posting it
                 }
 			} catch (err) {
@@ -74,6 +78,7 @@ stream.on('update', async (status) => {
     let postsArray = []
     // console.log(postInfo)
     if (Array.isArray(postInfo.video)) {
+	if (createPost.video.length > 1) {
         multiPost = true
         for (let i=0; i< postInfo.video.length; i++) {
         let {...postData} = postInfo
@@ -83,8 +88,13 @@ stream.on('update', async (status) => {
     } else if (postInfo.video != null && postInfo.images !=null) {
         let { images, ...videoPost } = postInfo
         let { video, ...imagePost } = postInfo
-        postsArray.push(videoPost, imagePost)
+        delete videoPost.images
+	videoPost.video = videoPost.video[0]
+	delete imagePost.video
+	imagePost.replyRef = {}
+	postsArray.push(videoPost, imagePost)
     }
+}
     if (!multiPost) {
 			try {
 				const posted = await bot.post(postInfo, {splitLongPost: true})
@@ -98,12 +108,22 @@ stream.on('update', async (status) => {
 				insert.run(jsonData) // store post info in the database so we can try to post it again later if the bot failed
 			}
         } else {
-            try {
-                for (let i=0; i< postsArray.length; i++) {
-                    let posted = await bot.post(postsArray[i])
-                    console.log("posted successfully", posted.uri)
-                    successPosts.inc()
-                    }
+		await bot.post(postsArray[0]).then(async(root) => {
+                let cid = root.cid
+		let uri = root.uri
+		successPosts.inc()
+		console.log("posted successfully", root.uri)
+		 for (let i=0; i< postsArray.length; i++) {
+			if (i === 0) {
+			continue
+			}
+                    
+                    postsArray[i].replyRef["parent"] = {uri: uri, cid: cid}
+		    postsArray[i].replyRef["root"] = {uri: uri, cid: cid}
+		    try {
+			let posted = await bot.post(postsArray[i])
+                   	successPosts.inc()
+			console.log("reply successful", posted.uri)
                 } catch(err) {
                     console.log(err)
                     console.log(postsArray[i])
@@ -113,6 +133,8 @@ stream.on('update', async (status) => {
             }
         }
     })
+}
+})
 
 checkDb()
 setInterval(checkDb, 30*60*1000) // check the db every 30 minutes to see if we missed any posts
