@@ -86,6 +86,7 @@ stream.on('update', async (status) => {
         postsArray.push(postData)
         }
     } else if (postInfo.video != null && postInfo.images !=null) {
+	multiPost = true
         let { images, ...videoPost } = postInfo
         let { video, ...imagePost } = postInfo
         delete videoPost.images
@@ -107,7 +108,7 @@ stream.on('update', async (status) => {
                 const jsonData = JSON.stringify(postInfo) // convert for insertion into db
 				insert.run(jsonData) // store post info in the database so we can try to post it again later if the bot failed
 			}
-        } else {
+        } else if (multiPost) {
 		await bot.post(postsArray[0]).then(async(root) => {
                 let cid = root.cid
 		let uri = root.uri
