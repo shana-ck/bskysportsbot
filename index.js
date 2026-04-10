@@ -64,6 +64,7 @@ const checkDb = async() => {
 
 stream.on('connect', () => {
     console.log('connected to Mastodon streaming API')
+    console.log('current version 2.0.2')
     }
 )
 
@@ -71,30 +72,30 @@ stream.on('update', async (status) => {
     if (status.reblog != null) {
 	status = status.reblog
     }
-    let newPost = getPostText(status)
+    let newPost = await getPostText(status)
     let postInfo = constructPost(newPost)
     // deal with scenarios where we need to split media attachments (videos/gifs/images) into multiple posts
     let multiPost = false
     let postsArray = []
     // console.log(postInfo)
     if (Array.isArray(postInfo.video)) {
-	if (createPost.video.length > 1) {
+        if (postInfo.video != null && postInfo.images !=null) {
+	    multiPost = true
+        let { images, ...videoPost } = postInfo
+        let { video, ...imagePost } = postInfo
+        delete videoPost.images
+	    videoPost.video = videoPost.video[0]
+	    delete imagePost.video
+	    imagePost.replyRef = {}
+	    postsArray.push(videoPost, imagePost)
+        } else if (createPost.video.length > 1) {
         multiPost = true
         for (let i=0; i< postInfo.video.length; i++) {
         let {...postData} = postInfo
         postData.video = postInfo.video[i]
         postsArray.push(postData)
         }
-    } else if (postInfo.video != null && postInfo.images !=null) {
-	multiPost = true
-        let { images, ...videoPost } = postInfo
-        let { video, ...imagePost } = postInfo
-        delete videoPost.images
-	videoPost.video = videoPost.video[0]
-	delete imagePost.video
-	imagePost.replyRef = {}
-	postsArray.push(videoPost, imagePost)
-    }
+    } 
 }
     if (!multiPost) {
 			try {

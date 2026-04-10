@@ -29,10 +29,10 @@ Hey look I figured out Docker! Use the attached Docker Compose file to run in Do
 
 Intimidated by Docker? Me too. Fortunately you can just use something like PM2 to run the code in a VPS or on a Raspberry Pi.
 
-Once the bot is running, you can check the logs and should see "connected to Mastodon streaming API". On a successful post to Bluesky, the bot will log the post URI.
+Once the bot is running, you can check the logs and should see "connected to Mastodon streaming API" as well as the current version. On a successful post to Bluesky, the bot will log the post URI.
 
 ## TODO
 
-- [ ] Have posts with multiple videos/video and images post as a thread
+- [X] Have posts with multiple videos/video and images post as a thread
 
 - [ ] Set option to clear database of failed posts periodically

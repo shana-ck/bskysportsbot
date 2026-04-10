@@ -47,15 +47,11 @@ const constructPost = (postObject) => {
                     postData.images = imageObj
                 } else {
                     let altText
-                    if (alt[0] == "NOALTTEXT") {
+                    if (alt[0] == "NOALTTEXT" || typeof(alt[0]) != 'string') {
                             altText = null
                         } else {
-                            if (typeof(alt[0] != 'string')) {
-                                altText = null
-                            } else {
                             altText = alt[0]
                         }
-                    }
                     let imageObj = {data: url, alt: altText}
                     imagesArr.push(imageObj)
                     postData.images = imagesArr 

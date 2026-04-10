@@ -3,7 +3,17 @@ import "dotenv/config"
 const HANDLE = process.env.BSKY_HANDLE // gets bluesky handle of your bot from .env file
 const MASTO_HANDLE = process.env.MASTO_HANDLE 
 
-const getPostText = (awaitTweet) => {
+const checkImgSize = async(url) => {
+	const response = await fetch(url, {method: 'HEAD'})
+	const size = response.headers.get('content-length')
+	if (size > 1000000) {
+		return false
+	} else {
+	return true
+	}
+}
+
+const getPostText = async(awaitTweet) => {
     let pReg = new RegExp("</p><p>", "g"); // A regex to deal with <p></p>. This should create a new section in the text, which we do via 2 line breaks.
     let brReg = new RegExp("<br>", "g"); // A regex to deal with <br>. This should go to the next line, which we do via a line break.
     let quoteReg = new RegExp(`\\\\"`, "g"); // A regex to deal with \". This should be replaced with a " value with no \.
@@ -34,7 +44,12 @@ const getPostText = (awaitTweet) => {
 		for (const attachment of objJSON.media_attachments) {
 			let postAltTextArr = [];
 			if (attachment.type == "image" || attachment.type == "gifv" || attachment.type == "video") {
+				let imgSize = await checkImgSize(attachment.url)
+				if (imgSize && attachment.type == "image") {
 				postUrlArr.push(attachment.url)
+				} else {
+					postUrlArr.push(attachment.preview_url)
+				}
 			}
 			if (attachment.type == "video" || attachment.type == "gifv") {
 				postAltTextArr.push(attachment.meta["original"]["width"], attachment.meta["original"]["height"], attachment.meta["original"]["duration"], attachment.preview_url)
