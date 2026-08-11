@@ -25,6 +25,7 @@
     "better-sqlite3": "^12.8.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "ffm-script": "^1.6.0",
     "megalodon": "^10.2.4",
     "prom-client": "^15.1.3"
   }

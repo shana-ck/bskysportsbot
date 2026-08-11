@@ -6,11 +6,21 @@ import { Bot } from "@skyware/bot";
 import "dotenv/config"
 import db from "./db.js";
 import { DatabaseSync } from 'node:sqlite'
+import { convert } from "ffm-script";
+import { writeFile, unlink } from "node:fs/promises"
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 
 const bot = new Bot()
 
 const metricsServer = startMetricsServer(9000)
+
+const getBlobFromURL = async(url) => {
+  const resp = await fetch(url)
+  const blob = await resp.blob()
+  return blob
+}
 
 await bot.login({
 	identifier: process.env.BSKY_HANDLE, // make sure to update .env with your bot handle!
@@ -104,6 +114,26 @@ stream.on('update', async (status) => {
 				successPosts.inc()
 			} catch (err) {
 				console.log(err)
+                if (err.cause.description.includes("blob too big")) {
+                  console.log("attempting to compress video blob")
+                    const inputPath = join(tmpdir(), `input-${Date.now()}.mp4`)
+                    const outputPath = join(tmpdir(), `output-${Date.now()}.mp4`)
+                    const videoBlob = await getBlobFromURL(postInfo.video.data)
+                    const arrayBuffer = await videoBlob.arrayBuffer()
+                    await writeFile(inputPath, Buffer.from(arrayBuffer))
+                    try {
+                        await convert(inputPath, outputPath, {quality: 'balanced'})
+                        postInfo.video.data = outputPath
+                        const posted = await bot.post(postInfo, {splitLongPost: true})
+                        console.log("posted successfully", posted.uri, postInfo)
+                        successPosts.inc()
+                    } catch(err) {
+                        console.log(err)
+                    } finally {
+                    await unlink(inputPath).catch(() => {})
+                    await unlink(outputPath).catch(()=> {})
+                }
+                }
                 console.log(postInfo)
 				failPosts.inc()
                 const jsonData = JSON.stringify(postInfo) // convert for insertion into db
@@ -111,7 +141,7 @@ stream.on('update', async (status) => {
 			}
         } else if (multiPost) {
 		await bot.post(postsArray[0]).then(async(root) => {
-                let cid = root.cid
+        let cid = root.cid
 		let uri = root.uri
 		successPosts.inc()
 		console.log("posted successfully", root.uri)
@@ -120,11 +150,11 @@ stream.on('update', async (status) => {
 			continue
 			}
                     
-                    postsArray[i].replyRef["parent"] = {uri: uri, cid: cid}
+            postsArray[i].replyRef["parent"] = {uri: uri, cid: cid}
 		    postsArray[i].replyRef["root"] = {uri: uri, cid: cid}
 		    try {
 			let posted = await bot.post(postsArray[i])
-                   	successPosts.inc()
+            successPosts.inc()
 			console.log("reply successful", posted.uri)
                 } catch(err) {
                     console.log(err)
@@ -164,3 +194,5 @@ process.on("SIGTERM", function () {
         process.exit(1)
     }
 })
+
+
