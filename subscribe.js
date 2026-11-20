@@ -47,7 +47,7 @@ const getPostText = async(awaitTweet) => {
 			let postAltTextArr = [];
 			if (attachment.type == "image" || attachment.type == "gifv" || attachment.type == "video") {
 				let imgSize = await checkImgSize(attachment.url)
-				if (imgSize && attachment.type == "image") {
+				if ((imgSize && attachment.type == "image") || (attachment.type == "video") {
 				postUrlArr.push(attachment.url)
 				} else {
 					postUrlArr.push(attachment.preview_url)
