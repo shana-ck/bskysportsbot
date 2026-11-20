@@ -39,9 +39,11 @@ const getPostText = async(awaitTweet) => {
     let altTextArr = [];
     let cardArr = [];
     let postUrlArr = [];
+	let dataJSON = objJSON["data"][0]
 
-	if (objJSON.media_attachments.length > 0) {
-		for (const attachment of objJSON.media_attachments) {
+
+	if (Object.keys(dataJSON.media_attachments).length > 0) {
+		for (const attachment of Object.values(dataJSON.media_attachments)) {
 			let postAltTextArr = [];
 			if (attachment.type == "image" || attachment.type == "gifv" || attachment.type == "video") {
 				let imgSize = await checkImgSize(attachment.url)
@@ -68,8 +70,8 @@ const getPostText = async(awaitTweet) => {
 	}
 		urlArr.push(postUrlArr);
 		
-		let contentJSON = objJSON.content; // Retrieve post content 
-
+		let contentJSON = dataJSON.content; // Retrieve post content 
+	
 		let contentString = contentJSON.replace(twitterReg, "").replace(sportsBotsReg, "").replace(logoReg, "").replace(quoteReg, `"`).replace(andReg, "&").replace(pReg, "\n\n").replace(brReg, "\n").replace(tagReg, "").replace(singleQuoteReg, "'").replace(gtReg, ">").replace(ltReg, "<"); //Use the ", &, <p>, and <br> regexes to apply appropriate formatting. Then use the general regex to remove the HTML formatting from the mastodon post. 
 
 		if (contentString.includes("GreatClips") || contentString.includes("HarrisTeeter") || contentString.includes(" RT ") || contentString.includes("Retweet ") || contentString.includes("retweet ") || contentString.includes("RETWEET "))
@@ -77,7 +79,7 @@ const getPostText = async(awaitTweet) => {
 			contentString = contentString + "\n\n (Offer not valid on Bluesky.)";
 		}
 
-		if (objJSON.card != null)
+		if (dataJSON.card != null)
 		{
 			// contentString = contentString.replace(invalidLinkReg, objJSON.card.url);
 			let postCardArr = [];
@@ -96,3 +98,4 @@ const getPostText = async(awaitTweet) => {
 }
 
 export default getPostText
+

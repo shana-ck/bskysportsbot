@@ -52,21 +52,49 @@ const checkDb = async() => {
         const posts = select.all()
         posts.forEach(async post => {
             // attempt to post all posts from the database
-            try {
-                const id = post.id
+        const id = post.id
 		let postData = JSON.parse(post.post)
 		if ('createdAt' in postData) {
 			delete postData.createdAt
 		}
+        try {
+
 		const postBuffer = await bot.post(postData, { splitLongPost: true}) // convert post data from JSON and send to bot
                 if (postBuffer.uri) { // check if post was successful
                     console.log("posted from db", postBuffer.uri) // log post uri
 		    successPosts.inc()
 		    failPosts.dec()
-                    deleteStmt.run(id) // delete post from database so we don't keep posting it
+            deleteStmt.run(id) // delete post from database so we don't keep posting it
                 }
 			} catch (err) {
 				console.log(err)
+                if (err.cause.description.includes("blob too big")) {
+                    let postData = JSON.parse(post.post)
+                    if ('createdAt' in postData) {
+			                delete postData.createdAt
+		            }
+                    console.log("attempting to compress video blob")
+                    const inputPath = join(tmpdir(), `input-${Date.now()}.mp4`)
+                    const outputPath = join(tmpdir(), `output-${Date.now()}.mp4`)
+                    const videoBlob = await getBlobFromURL(postData.video.data)
+                    const arrayBuffer = await videoBlob.arrayBuffer()
+                    await writeFile(inputPath, Buffer.from(arrayBuffer))
+                    try {
+                        await convert(inputPath, outputPath, {quality: 'balanced'})
+                        const blobUrl = URL.createObjectURL(outputPath)
+                        postData.video.data = blobUrl
+                        const posted = await bot.post(postData, {splitLongPost: true})
+                        console.log("posted successfully", posted.uri, postInfo)
+                    } catch(err) {
+                        console.log(err)
+                    } finally {
+                    await unlink(inputPath).catch(() => {})
+                    await unlink(outputPath).catch(()=> {})
+                    successPosts.inc()
+		            failPosts.dec()
+                    deleteStmt.run(id)
+                }
+                }
              }
         })
     }
@@ -74,7 +102,7 @@ const checkDb = async() => {
 
 stream.on('connect', () => {
     console.log('connected to Mastodon streaming API')
-    console.log('current version 2.0.2')
+    console.log('current version 2.0.3')
     }
 )
 
@@ -123,7 +151,8 @@ stream.on('update', async (status) => {
                     await writeFile(inputPath, Buffer.from(arrayBuffer))
                     try {
                         await convert(inputPath, outputPath, {quality: 'balanced'})
-                        postInfo.video.data = outputPath
+                        const blobUrl = URL.createObjectURL(outputPath)
+                        postInfo.video.data = blobUrl
                         const posted = await bot.post(postInfo, {splitLongPost: true})
                         console.log("posted successfully", posted.uri, postInfo)
                         successPosts.inc()

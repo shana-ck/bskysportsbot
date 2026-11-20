@@ -21,7 +21,7 @@ const constructPost = (postObject) => {
         for (let i = 0; i < urls[0].length; i++) {
             let url = urls[0][i]
             let alt = alts[i]
-            if (url.slice(-3) == "mp4" && parseFloat(alt[2]) < 180) { // limits videos to 180 seconds in length as per Bluesky video limits
+            if (url.slice(-3) == "mp4" && parseFloat(alt[2]) < 600) { // limits videos to 180 seconds in length as per Bluesky video limits
                 let altText
                 if (alt.length >= 4) {
                     if (alt[4] == "NOALTTEXT") {
@@ -43,6 +43,9 @@ const constructPost = (postObject) => {
             }
             else {
                 if (url.slice(-3) == "mp4") {
+			console.log("video upload failed")
+			console.log(parseFloat(alt[2]))
+			console.log(url)
                     let imageObj = [{data: alt[3], alt: 'Unable to upload video. This is a thumbnail instead.'}]
                     postData.images = imageObj
                 } else {
